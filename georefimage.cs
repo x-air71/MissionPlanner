@@ -667,6 +667,10 @@ namespace MissionPlanner
             using (StreamWriter swloctxt = new StreamWriter(dirWithImages + Path.DirectorySeparatorChar + "location.txt"))
             using (StreamWriter swloctel = new StreamWriter(dirWithImages + Path.DirectorySeparatorChar + "location.tel"))
             using (XmlTextWriter swloctrim = new XmlTextWriter(dirWithImages + Path.DirectorySeparatorChar + "location.jxl", Encoding.ASCII))
+             // added by Marco Fornalè - Export files for Ensomosaic integration
+            using (StreamWriter swlogtrp = new StreamWriter(dirWithImages + Path.DirectorySeparatorChar + "location.TRP"))
+            using (StreamWriter swloggps = new StreamWriter(dirWithImages + Path.DirectorySeparatorChar + "location.GPS"))
+            // ------------- Marco Fornalè
             {
                 swloctrim.Formatting = Formatting.Indented;
                 swloctrim.WriteStartDocument(false);
@@ -805,6 +809,22 @@ namespace MissionPlanner
                 swloctel.WriteLine("#name	utc	longitude	latitude	height");
 
                 swloctxt.WriteLine("#name longitude/X latitude/Y height/Z yaw pitch roll");
+                
+                // added by Marco Fornalè - adding the headers for TRP and GPS files for EnsoMosaic
+                // header for TRP file
+                swlogtrp.WriteLine("# Created by Marco Fornalè - "+DateTime.Now.ToString("MMM dd yyyy HH:mm:ss"));
+                swlogtrp.WriteLine("Projection: NUTM 27 WGS84 NoDatTra");
+                swlogtrp.WriteLine("Calibration_file: .\\camera.cal");
+                swlogtrp.WriteLine("Ground_control_point_file: NO.GCP");
+                swlogtrp.WriteLine("Approximate_terrain_altitude: 0.0");
+                swlogtrp.WriteLine("Camera_rotation: 180");
+                swlogtrp.WriteLine("Map_files: 0");
+
+                // header for GPS file
+                swloggps.WriteLine("#Line  Frame    Longitude       Latitude    Altitude  Heading     Date   Time   Year    Yaw    Pitch    Roll    Tilt");
+                swloggps.WriteLine("#Td     Id      Dec. deg.       Dec. deg.       m       deg               UTC           deg     deg     deg     tag");
+                swloggps.WriteLine("#-------------------------------------------------------------------------------------------------------------------");
+                // ---Marco Fornalè
 
                 TXT_outputlog.AppendText("Start Processing\n");
 
@@ -905,6 +925,14 @@ namespace MissionPlanner
 
 
                     swloctel.WriteLine(filename + "\t" + picInfo.Time.ToString("yyyy:MM:dd HH:mm:ss") + "\t" + picInfo.Lon + "\t" + picInfo.Lat + "\t" + picInfo.getAltitude(useAMSLAlt));
+                    
+                    // added by Marco Fornalè - Writing info to TRP and GPS files for Ensomosaic
+                    swlogtrp.WriteLine("    1"+" "+ counter1 +" "+ filename +" \""+dirWithImages+"\"");
+                    swloggps.WriteLine("1" + "\t" + counter1 + "\t" + picInfo.Lon.ToString("00.000000").Replace(",", ".") + "\t" + picInfo.Lat.ToString("00.000000").Replace(",", ".") + "\t" + picInfo.RelAlt.ToString("0") + "\t" + picInfo.Yaw.ToString("0") + "\t" + picInfo.Time.ToString("MMM dd HH:mm:ss yyyy") + "\t" + picInfo.Yaw.ToString("0") + "\t" + picInfo.Pitch.ToString("0.0").Replace(",", ".") + "\t" + picInfo.Roll.ToString("0.0").Replace(",", ".") + "\t" + "ypr");
+                    swlogtrp.Flush();
+                    swloggps.Flush();
+                    // end modification of Marco Fornalè
+                    
                     swloctel.Flush();
                     swloctxt.Flush();
 
